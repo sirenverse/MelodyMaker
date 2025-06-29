@@ -17,4 +17,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd MelodyMaker-main && npm run dev"
+args = "cd MelodyMaker-main && npm install && npm run dev"
