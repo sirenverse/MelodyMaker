@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Piano keyboard styles */
+.piano-container {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.piano-keyboard {
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.piano-key {
+  border: none;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  user-select: none;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+}
+
+.white-key {
+  width: 30px;
+  height: 120px;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 100%);
+  border: 1px solid #ddd;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.white-key:hover {
+  background: linear-gradient(to bottom, #f5f5f5 0%, #eeeeee 100%);
+  transform: translateY(1px);
+}
+
+.white-key.active {
+  background: linear-gradient(to bottom, #e0e0e0 0%, #d0d0d0 100%);
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.white-key.highlighted {
+  background: linear-gradient(to bottom, #e3f2fd 0%, #bbdefb 100%);
+  border-color: #2196f3;
+}
+
+.black-key {
+  width: 20px;
+  height: 80px;
+  background: linear-gradient(to bottom, #333333 0%, #1a1a1a 100%);
+  border: 1px solid #000;
+  border-radius: 0 0 2px 2px;
+  position: absolute;
+  z-index: 2;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.black-key:hover {
+  background: linear-gradient(to bottom, #444444 0%, #2a2a2a 100%);
+  transform: translateY(1px);
+}
+
+.black-key.active {
+  background: linear-gradient(to bottom, #555555 0%, #3a3a3a 100%);
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.black-key.highlighted {
+  background: linear-gradient(to bottom, #1976d2 0%, #0d47a1 100%);
+  border-color: #2196f3;
+}
+
+.note-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #666;
+  pointer-events: none;
+}
+
+.black-key .note-label {
+  color: #ccc;
+}
+
+.white-key.highlighted .note-label,
+.black-key.highlighted .note-label {
+  color: #fff;
+  font-weight: 700;
+}

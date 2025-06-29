@@ -1,0 +1,3 @@
+# This file ensures the salamander directory exists
+# Place your .wav files here following the naming convention:
+# A0v8.wav, C1v8.wav, E1v8.wav, etc.
