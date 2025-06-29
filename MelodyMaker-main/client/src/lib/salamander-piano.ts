@@ -1,3 +1,4 @@
+
 // Salamander Grand Piano sample loader and player
 export class SalamanderPiano {
   private audioContext: AudioContext | null = null;
@@ -12,18 +13,19 @@ export class SalamanderPiano {
   async initialize(audioContext: AudioContext) {
     this.audioContext = audioContext;
     
-    // Load essential samples for common notes
+    // Load essential samples for chord building - optimized selection
     const essentialNotes = [
       'A0', 'C1', 'E1', 'A1', 'C2', 'E2', 'A2', 'C3', 'E3', 'A3',
-      'C4', 'E4', 'A4', 'C5', 'E5', 'A5', 'C6', 'E6', 'A6', 'C7'
+      'C4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5', 
+      'B5', 'C6', 'E6', 'A6', 'C7'
     ];
 
     try {
       await this.loadSamples(essentialNotes);
       this.isLoaded = true;
-      console.log('Salamander Piano samples loaded successfully');
+      console.log(`Salamander Piano samples loaded: ${this.samples.size} samples available`);
     } catch (error) {
-      console.warn('Failed to load Salamander samples, falling back to synthesis:', error);
+      console.warn('Failed to load Salamander samples:', error);
       this.isLoaded = false;
     }
   }
@@ -31,18 +33,26 @@ export class SalamanderPiano {
   private async loadSamples(notes: string[]) {
     const loadPromises = notes.map(async (note) => {
       try {
-        // Try different velocity layers (v1-v16)
-        const velocity = 'v8'; // Medium velocity
-        const url = `${this.baseUrl}/${note}${velocity}.wav`;
+        // Try different velocity layers, prefer v8 (medium velocity)
+        const velocities = ['v8', 'v7', 'v9', 'v6', 'v10'];
         
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to load ${url}`);
-        
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
-        this.samples.set(note, audioBuffer);
+        for (const velocity of velocities) {
+          try {
+            const url = `${this.baseUrl}/${note}${velocity}.flac`;
+            const response = await fetch(url);
+            if (!response.ok) continue;
+            
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
+            this.samples.set(note, audioBuffer);
+            console.log(`Loaded sample: ${note}${velocity}.flac`);
+            break; // Successfully loaded, stop trying other velocities
+          } catch (error) {
+            continue; // Try next velocity
+          }
+        }
       } catch (error) {
-        console.warn(`Failed to load sample for ${note}:`, error);
+        console.warn(`Could not load any sample for ${note}`);
       }
     });
 
@@ -70,10 +80,10 @@ export class SalamanderPiano {
       source.playbackRate.value = sample.pitchShift;
     }
 
-    // Apply velocity and envelope
+    // Apply velocity and realistic piano envelope
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(velocity * 0.8, this.audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(velocity * 0.3, this.audioContext.currentTime + 0.3);
+    gainNode.gain.linearRampToValueAtTime(velocity * 0.9, this.audioContext.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(velocity * 0.4, this.audioContext.currentTime + 0.3);
     gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
 
     source.start();
@@ -124,6 +134,10 @@ export class SalamanderPiano {
   }
 
   isAvailable(): boolean {
-    return this.isLoaded;
+    return this.isLoaded && this.samples.size > 0;
+  }
+
+  getSampleCount(): number {
+    return this.samples.size;
   }
 }

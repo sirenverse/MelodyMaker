@@ -21,7 +21,7 @@ export function getScaleNotes(key: string, scale: string): string[] {
   });
 }
 
-// Get chords for a specific key and scale - ALWAYS show basic chords
+// Get essential chords optimized for Salamander Grand Piano samples
 export function getChordsForScale(
   key: string, 
   scale: string, 
@@ -31,9 +31,9 @@ export function getChordsForScale(
   const chords: Array<{ name: string; notes: string[] }> = [];
   
   if (scale === 'major') {
-    // Complete major scale chord collection - 25+ chords like OneMotion
+    // Essential piano chords - focused collection for great sound
     
-    // Basic triads (7 chords) - ALWAYS include these
+    // Basic triads (7 chords) - Core of piano playing
     const triadTypes = ['', 'm', 'm', '', '', 'm', 'dim'];
     for (let i = 0; i < 7; i++) {
       const root = scaleNotes[i];
@@ -45,55 +45,23 @@ export function getChordsForScale(
       });
     }
 
-    // Seventh chords (7 chords)
-    const seventhData = [
-      { type: 'maj7', intervals: [0, 2, 4, 6] }, // Imaj7
-      { type: 'm7', intervals: [1, 3, 5, 0] },   // ii7
-      { type: 'm7', intervals: [2, 4, 6, 1] },   // iii7
-      { type: 'maj7', intervals: [3, 5, 0, 2] }, // IVmaj7
-      { type: '7', intervals: [4, 6, 1, 3] },    // V7
-      { type: 'm7', intervals: [5, 0, 2, 4] },   // vi7
-      { type: 'm7b5', intervals: [6, 1, 3, 5] }  // vii7b5
+    // Essential seventh chords (5 most important)
+    const essentialSevenths = [
+      { name: scaleNotes[0] + 'maj7', notes: [scaleNotes[0], scaleNotes[2], scaleNotes[4], scaleNotes[6]] }, // Imaj7
+      { name: scaleNotes[1] + 'm7', notes: [scaleNotes[1], scaleNotes[3], scaleNotes[5], scaleNotes[0]] },   // ii7
+      { name: scaleNotes[3] + 'maj7', notes: [scaleNotes[3], scaleNotes[5], scaleNotes[0], scaleNotes[2]] }, // IVmaj7
+      { name: scaleNotes[4] + '7', notes: [scaleNotes[4], scaleNotes[6], scaleNotes[1], scaleNotes[3]] },    // V7
+      { name: scaleNotes[5] + 'm7', notes: [scaleNotes[5], scaleNotes[0], scaleNotes[2], scaleNotes[4]] }    // vi7
     ];
+    chords.push(...essentialSevenths);
 
-    seventhData.forEach((chord, i) => {
-      const root = scaleNotes[chord.intervals[0]];
-      const third = scaleNotes[chord.intervals[1] % 7];
-      const fifth = scaleNotes[chord.intervals[2] % 7];
-      const seventh = scaleNotes[chord.intervals[3] % 7];
-      
-      chords.push({
-        name: root + chord.type,
-        notes: [root, third, fifth, seventh]
-      });
-    });
-
-    // Suspended chords (4 chords)
-    const susChords = [
+    // Popular suspended chords (3 most useful)
+    const popularSus = [
       { name: scaleNotes[0] + 'sus2', notes: [scaleNotes[0], scaleNotes[1], scaleNotes[4]] },
       { name: scaleNotes[0] + 'sus4', notes: [scaleNotes[0], scaleNotes[3], scaleNotes[4]] },
-      { name: scaleNotes[3] + 'sus2', notes: [scaleNotes[3], scaleNotes[4], scaleNotes[0]] },
       { name: scaleNotes[4] + 'sus4', notes: [scaleNotes[4], scaleNotes[0], scaleNotes[1]] }
     ];
-    chords.push(...susChords);
-
-    // Add9 chords (simpler, no full 9ths) - 4 chords
-    const add9Chords = [
-      { name: scaleNotes[0] + 'add9', notes: [scaleNotes[0], scaleNotes[2], scaleNotes[4], scaleNotes[1]] },
-      { name: scaleNotes[3] + 'add9', notes: [scaleNotes[3], scaleNotes[5], scaleNotes[0], scaleNotes[4]] },
-      { name: scaleNotes[4] + 'add9', notes: [scaleNotes[4], scaleNotes[6], scaleNotes[1], scaleNotes[5]] },
-      { name: scaleNotes[5] + 'madd9', notes: [scaleNotes[5], scaleNotes[0], scaleNotes[2], scaleNotes[6]] }
-    ];
-    chords.push(...add9Chords);
-
-    // Power chords and inversions (4 chords)  
-    const powerChords = [
-      { name: scaleNotes[0] + '5', notes: [scaleNotes[0], scaleNotes[4]] },
-      { name: scaleNotes[3] + '5', notes: [scaleNotes[3], scaleNotes[0]] },
-      { name: scaleNotes[4] + '5', notes: [scaleNotes[4], scaleNotes[1]] },
-      { name: scaleNotes[5] + '5', notes: [scaleNotes[5], scaleNotes[2]] }
-    ];
-    chords.push(...powerChords);
+    chords.push(...popularSus);
 
   } else if (scale === 'minor') {
     // Natural minor scale chords

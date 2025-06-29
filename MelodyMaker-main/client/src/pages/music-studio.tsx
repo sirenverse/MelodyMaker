@@ -155,7 +155,6 @@ export default function MusicStudio() {
     }
   };
 
-  const [hoveredChord, setHoveredChord] = useState<Chord | null>(null);
   const [highlightedNotes, setHighlightedNotes] = useState<string[]>([]);
 
   // Listen for chord hover events to highlight piano keys
