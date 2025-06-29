@@ -370,7 +370,7 @@ export class AudioEngine {
 
   playScale(scaleNotes: string[], instrument: string) {
     // Use synthesized scales for all instruments
-    const noteFrequencies = scaleNotes.map(note => this.getNoteFrequency(note));
+    const noteFrequencies = scaleNotes.map(note => this.getNoteFrequencyPrivate(note));
     
     noteFrequencies.forEach((frequency, index) => {
       setTimeout(() => {
@@ -401,10 +401,10 @@ export class AudioEngine {
   }
 
   private getChordFrequencies(notes: string[]): number[] {
-    return notes.map(note => this.getNoteFrequency(note));
+    return notes.map(note => this.getNoteFrequencyPrivate(note));
   }
 
-  private getNoteFrequency(note: string): number {
+  getNoteFrequency(note: string): number {
     const noteFrequencies: Record<string, number> = {
       'C': 261.63, 'C#': 277.18, 'D': 293.66, 'D#': 311.13,
       'E': 329.63, 'F': 349.23, 'F#': 369.99, 'G': 392.00,
@@ -412,6 +412,10 @@ export class AudioEngine {
     };
     
     return noteFrequencies[note] || 440.00;
+  }
+
+  private getNoteFrequencyPrivate(note: string): number {
+    return this.getNoteFrequency(note);
   }
 
   // Record audio for WAV export
