@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -58,10 +59,25 @@ export default function MusicStudio() {
     const initAudio = async () => {
       try {
         audioEngine.initialize();
-        toast({ 
-          title: "🎹 Audio Engine Ready!", 
-          description: "High-quality synthesized instruments loaded successfully." 
-        });
+        
+        // Initialize Salamander piano
+        if (audioEngine.audioContext) {
+          await salamanderPiano.initialize(audioEngine.audioContext);
+          setSalamanderLoaded(salamanderPiano.isAvailable());
+          
+          if (salamanderPiano.isAvailable()) {
+            toast({ 
+              title: "🎹 Salamander Piano Loaded!", 
+              description: "High-quality piano samples are ready to play." 
+            });
+          } else {
+            toast({ 
+              title: "🎹 Audio Engine Ready!", 
+              description: "Using synthesized piano sounds." 
+            });
+          }
+        }
+        
         document.removeEventListener("click", initAudio);
       } catch (error) {
         console.error('Failed to initialize audio:', error);
@@ -73,27 +89,7 @@ export default function MusicStudio() {
       }
     };
     document.addEventListener("click", initAudio, { once: true });
-  }, [audioEngine, toast]);
-
-  useEffect(() => {
-    audioEngine.initialize();
-
-    // Initialize Salamander piano
-    const initializeSalamander = async () => {
-      try {
-        if (audioEngine.audioContext) {
-          await salamanderPiano.initialize(audioEngine.audioContext);
-          setSalamanderLoaded(salamanderPiano.isAvailable());
-          console.log("Salamander Piano loaded:", salamanderPiano.isAvailable());
-        }
-      } catch (error) {
-        console.warn("Failed to load Salamander Piano:", error);
-        setSalamanderLoaded(false);
-      }
-    };
-
-    initializeSalamander();
-  }, []);
+  }, [audioEngine, salamanderPiano, toast]);
 
   // Update tempo pulse animation
   useEffect(() => {
@@ -155,31 +151,16 @@ export default function MusicStudio() {
     }
   };
 
-  const [highlightedNotes, setHighlightedNotes] = useState<string[]>([]);
-
   // Listen for chord hover events to highlight piano keys
   useEffect(() => {
     const handleChordHover = (event: CustomEvent) => {
       const chord = event.detail;
       if (chord && chord.notes) {
-        // OneMotion-style highlighting: show only one instance of each note in middle octave
+        // Map chord notes to piano keys for highlighting
         const highlightedKeys: string[] = [];
         chord.notes.forEach((note: string) => {
           const baseNote = note.replace(/[0-9]/g, ""); // Remove octave numbers
-
-          // Map to middle octave range for realistic chord voicing
-          if (
-            baseNote === "C" ||
-            baseNote === "D" ||
-            baseNote === "E" ||
-            baseNote === "F" ||
-            baseNote === "G" ||
-            baseNote === "A" ||
-            baseNote === "B" ||
-            baseNote.includes("#")
-          ) {
-            highlightedKeys.push(baseNote + "3"); // All notes in octave 3
-          }
+          highlightedKeys.push(baseNote + "3"); // Map to octave 3 for display
         });
         setHighlightedNotes(highlightedKeys);
       } else {
@@ -197,17 +178,17 @@ export default function MusicStudio() {
   }, []);
 
   const handleChordPlay = (chord: Chord) => {
-       // Try to use Salamander piano samples first, fall back to synthesis
-       if (salamanderLoaded && currentInstrument === 'piano') {
-        chord.notes.forEach((noteName: string) => {
-          const success = salamanderPiano.playNote(noteName + '4', 0.7); // Default to octave 4
-          if (!success) {
-            audioEngine.playNote(440, currentInstrument); // Fallback frequency
-          }
-        });
-      } else {
-          audioEngine.playChord(chord, currentInstrument);
-      }
+    // Try to use Salamander piano samples first, fall back to synthesis
+    if (salamanderLoaded && currentInstrument === 'piano') {
+      chord.notes.forEach((noteName: string) => {
+        const success = salamanderPiano.playNote(noteName + '4', 0.7); // Default to octave 4
+        if (!success) {
+          audioEngine.playNote(440, currentInstrument); // Fallback frequency
+        }
+      });
+    } else {
+      audioEngine.playChord(chord, currentInstrument);
+    }
 
     if (isRecording) {
       setChordProgression((prev) => [
@@ -326,8 +307,8 @@ export default function MusicStudio() {
             <span className="text-sm text-gray-400">
               Music Creation Made Simple
             </span>
-            <span className="text-xs text-green-400 bg-green-900/20 px-2 py-1 rounded">
-              🎵 Enhanced Audio Engine Active
+            <span className={`text-xs px-2 py-1 rounded ${salamanderLoaded ? 'text-green-400 bg-green-900/20' : 'text-blue-400 bg-blue-900/20'}`}>
+              {salamanderLoaded ? '🎹 Salamander Piano Active' : '🎵 Synth Engine Active'}
             </span>
           </div>
 
@@ -433,7 +414,9 @@ export default function MusicStudio() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="piano">🎹 Piano (Enhanced)</SelectItem>
+                    <SelectItem value="piano">
+                      🎹 Piano {salamanderLoaded ? '(Samples)' : '(Synth)'}
+                    </SelectItem>
                     <SelectItem value="guitar">🎸 Guitar</SelectItem>
                     <SelectItem value="bass">🎸 Bass</SelectItem>
                   </SelectContent>
@@ -550,11 +533,11 @@ export default function MusicStudio() {
 
               <TabsContent value="piano">
                 <h2 className="text-2xl font-bold mb-6 text-white">
-                  Virtual Piano
+                  Virtual Piano {salamanderLoaded ? '(High Quality Samples)' : '(Synthesized)'}
                 </h2>
                 <PianoKeyboard
                   onNotePlay={handleNotePlay}
-                  highlightedNotes={hoveredChord?.notes || []}
+                  highlightedNotes={highlightedNotes}
                 />
               </TabsContent>
 
@@ -572,7 +555,7 @@ export default function MusicStudio() {
                 <PianoKeyboard
                   onNotePlay={handleNotePlay}
                   octaveShift={-2}
-                  highlightedNotes={hoveredChord?.notes || []}
+                  highlightedNotes={highlightedNotes}
                 />
               </TabsContent>
             </Tabs>
