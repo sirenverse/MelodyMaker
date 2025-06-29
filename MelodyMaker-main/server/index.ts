@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static files from public directory (for audio samples)
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(import.meta.dirname, '../public')));
 
 app.use((req, res, next) => {
   const start = Date.now();
