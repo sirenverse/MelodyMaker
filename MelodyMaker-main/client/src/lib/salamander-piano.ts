@@ -10,8 +10,23 @@ export class SalamanderPiano {
     this.baseUrl = baseUrl;
   }
 
+  // Test if sample directory is accessible
+  private async testSampleAccess(): Promise<boolean> {
+    try {
+      // Test with a common sample that should exist
+      const testUrl = `${this.baseUrl}/A4v8.flac`;
+      const response = await fetch(testUrl, { method: 'HEAD' });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
+
   async initialize(audioContext: AudioContext) {
     this.audioContext = audioContext;
+    
+    console.log('🎹 Initializing Salamander Piano...');
+    console.log(`Sample directory: ${this.baseUrl}`);
     
     // Load essential samples for chord building - optimized selection
     const essentialNotes = [
@@ -21,11 +36,27 @@ export class SalamanderPiano {
     ];
 
     try {
+      // First test if sample directory is accessible
+      const canAccess = await this.testSampleAccess();
+      if (!canAccess) {
+        console.warn('⚠️ Cannot access sample directory. Sample files may be missing.');
+        console.warn(`Expected location: ${this.baseUrl}/`);
+        console.warn('Please ensure FLAC sample files are placed in the public/audio/salamander/ directory.');
+      }
+      
       await this.loadSamples(essentialNotes);
-      this.isLoaded = true;
-      console.log(`Salamander Piano samples loaded: ${this.samples.size} samples available`);
+      
+      if (this.samples.size > 0) {
+        this.isLoaded = true;
+        console.log(`✅ Salamander Piano initialized successfully: ${this.samples.size} samples available`);
+      } else {
+        this.isLoaded = false;
+        console.warn('⚠️ Salamander Piano: No samples could be loaded. Check if sample files exist in /public/audio/salamander/');
+        console.warn('📁 Expected files: A0v8.flac, C1v8.flac, E1v8.flac, etc.');
+        console.warn('🔄 Falling back to synthesized piano sounds.');
+      }
     } catch (error) {
-      console.warn('Failed to load Salamander samples:', error);
+      console.error('❌ Failed to initialize Salamander Piano:', error);
       this.isLoaded = false;
     }
   }
@@ -34,29 +65,57 @@ export class SalamanderPiano {
     const loadPromises = notes.map(async (note) => {
       try {
         // Try different velocity layers, prefer v8 (medium velocity)
-        const velocities = ['v8', 'v7', 'v9', 'v6', 'v10'];
+        const velocities = ['v8', 'v7', 'v9', 'v6', 'v10', 'v5', 'v11', 'v4', 'v12'];
         
         for (const velocity of velocities) {
           try {
             const url = `${this.baseUrl}/${note}${velocity}.flac`;
+            console.log(`Attempting to load: ${url}`);
+            
             const response = await fetch(url);
-            if (!response.ok) continue;
+            if (!response.ok) {
+              console.log(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+              continue;
+            }
             
             const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
-            this.samples.set(note, audioBuffer);
-            console.log(`Loaded sample: ${note}${velocity}.flac`);
-            break; // Successfully loaded, stop trying other velocities
-          } catch (error) {
+            
+            // Check if we actually got data
+            if (arrayBuffer.byteLength === 0) {
+              console.log(`Empty file: ${url}`);
+              continue;
+            }
+            
+            try {
+              const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
+              this.samples.set(note, audioBuffer);
+              console.log(`✓ Successfully loaded sample: ${note}${velocity}.flac (${audioBuffer.duration.toFixed(2)}s)`);
+              break; // Successfully loaded, stop trying other velocities
+            } catch (decodeError) {
+              console.log(`Failed to decode audio for ${url}:`, decodeError);
+              continue;
+            }
+          } catch (fetchError) {
+            console.log(`Network error loading ${note}${velocity}.flac:`, fetchError);
             continue; // Try next velocity
           }
         }
+        
+        if (!this.samples.has(note)) {
+          console.warn(`⚠️ Could not load any sample for ${note} - all velocities failed`);
+        }
       } catch (error) {
-        console.warn(`Could not load any sample for ${note}`);
+        console.error(`Unexpected error loading samples for ${note}:`, error);
       }
     });
 
-    await Promise.allSettled(loadPromises);
+    const results = await Promise.allSettled(loadPromises);
+    console.log(`Sample loading complete. Loaded ${this.samples.size} out of ${notes.length} requested samples.`);
+    
+    // Log which samples we have
+    if (this.samples.size > 0) {
+      console.log('Available samples:', Array.from(this.samples.keys()).sort());
+    }
   }
 
   playNote(note: string, velocity = 0.7, duration = 2.0) {
