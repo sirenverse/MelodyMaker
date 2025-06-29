@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -59,12 +58,12 @@ export default function MusicStudio() {
     const initAudio = async () => {
       try {
         audioEngine.initialize();
-        
+
         // Initialize Salamander piano
         if (audioEngine.audioContext) {
           await salamanderPiano.initialize(audioEngine.audioContext);
           setSalamanderLoaded(salamanderPiano.isAvailable());
-          
+
           if (salamanderPiano.isAvailable()) {
             toast({ 
               title: "🎹 Salamander Piano Loaded!", 
@@ -77,7 +76,7 @@ export default function MusicStudio() {
             });
           }
         }
-        
+
         document.removeEventListener("click", initAudio);
       } catch (error) {
         console.error('Failed to initialize audio:', error);

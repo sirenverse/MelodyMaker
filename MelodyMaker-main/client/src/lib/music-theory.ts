@@ -1,7 +1,7 @@
 export function getScaleNotes(key: string, scale: string): string[] {
   const chromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const keyIndex = chromatic.indexOf(key);
-  
+
   if (keyIndex === -1) return [];
 
   const scalePatterns: Record<string, number[]> = {
@@ -14,7 +14,7 @@ export function getScaleNotes(key: string, scale: string): string[] {
   };
 
   const pattern = scalePatterns[scale] || scalePatterns.major;
-  
+
   return pattern.map(interval => {
     const noteIndex = (keyIndex + interval) % 12;
     return chromatic[noteIndex];
@@ -29,10 +29,10 @@ export function getChordsForScale(
 ): Array<{ name: string; notes: string[] }> {
   const scaleNotes = getScaleNotes(key, scale);
   const chords: Array<{ name: string; notes: string[] }> = [];
-  
+
   if (scale === 'major') {
     // Essential piano chords - focused collection for great sound
-    
+
     // Basic triads (7 chords) - Core of piano playing
     const triadTypes = ['', 'm', 'm', '', '', 'm', 'dim'];
     for (let i = 0; i < 7; i++) {
@@ -85,7 +85,7 @@ export function getChordsForScale(
       const third = scaleNotes[(i + 2) % 7];
       const fifth = scaleNotes[(i + 4) % 7];
       const seventh = scaleNotes[(i + 6) % 7];
-      
+
       chords.push({
         name: root + seventhTypes[i],
         notes: [root, third, fifth, seventh]
@@ -97,7 +97,7 @@ export function getChordsForScale(
     for (let i = 0; i < scaleNotes.length; i++) {
       const root = scaleNotes[i];
       const fifth = scaleNotes[(i + 2) % scaleNotes.length];
-      
+
       // Power chord (root + fifth)
       chords.push({
         name: root + '5',
@@ -118,7 +118,7 @@ export function getChordsForScale(
     // Blues scale chords - emphasis on dominant 7ths and power chords
     for (let i = 0; i < scaleNotes.length; i++) {
       const root = scaleNotes[i];
-      
+
       // Power chords
       if (i + 2 < scaleNotes.length) {
         const fifth = scaleNotes[(i + 2) % scaleNotes.length];
@@ -151,7 +151,7 @@ export function getChordsForScale(
       const third = scaleNotes[(i + 2) % 7];
       const fifth = scaleNotes[(i + 4) % 7];
       const seventh = scaleNotes[(i + 6) % 7];
-      
+
       // Triad
       chords.push({
         name: root + triadTypes[i],
@@ -176,7 +176,7 @@ export function getChordsForScale(
       const third = scaleNotes[(i + 2) % 7];
       const fifth = scaleNotes[(i + 4) % 7];
       const seventh = scaleNotes[(i + 6) % 7];
-      
+
       // Triad
       chords.push({
         name: root + triadTypes[i],
@@ -202,7 +202,7 @@ export function getChordsForScale(
       });
     }
   }
-  
+
   return chords;
 }
 
@@ -234,7 +234,7 @@ export function getNoteFrequency(note: string, octave = 4): number {
     'E': 329.63, 'F': 349.23, 'F#': 369.99, 'G': 392.00,
     'G#': 415.30, 'A': 440.00, 'A#': 466.16, 'B': 493.88
   };
-  
+
   const baseFreq = noteFrequencies[note] || 440.00;
   return baseFreq * Math.pow(2, octave - 4);
 }

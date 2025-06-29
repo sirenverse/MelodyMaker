@@ -28,37 +28,65 @@ export class SalamanderPiano {
     console.log('🎹 Initializing Salamander Piano...');
     console.log(`Sample directory: ${this.baseUrl}`);
     
-    // Load essential samples for chord building - optimized selection
-    const essentialNotes = [
-      'A0', 'C1', 'E1', 'A1', 'C2', 'E2', 'A2', 'C3', 'E3', 'A3',
-      'C4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5', 
-      'B5', 'C6', 'E6', 'A6', 'C7'
-    ];
-
     try {
-      // First test if sample directory is accessible
-      const canAccess = await this.testSampleAccess();
-      if (!canAccess) {
-        console.warn('⚠️ Cannot access sample directory. Sample files may be missing.');
+      // Auto-discover all available notes from the sample directory
+      const availableNotes = await this.discoverAvailableNotes();
+      console.log(`📁 Discovered ${availableNotes.length} note types in sample directory`);
+      
+      if (availableNotes.length === 0) {
+        console.warn('⚠️ No FLAC files found in sample directory.');
         console.warn(`Expected location: ${this.baseUrl}/`);
-        console.warn('Please ensure FLAC sample files are placed in the public/audio/salamander/ directory.');
+        console.warn('🔄 Falling back to synthesized piano sounds.');
+        this.isLoaded = false;
+        return;
       }
       
-      await this.loadSamples(essentialNotes);
+      await this.loadSamples(availableNotes);
       
       if (this.samples.size > 0) {
         this.isLoaded = true;
-        console.log(`✅ Salamander Piano initialized successfully: ${this.samples.size} samples available`);
+        console.log(`✅ Salamander Piano initialized successfully: ${this.samples.size} samples loaded`);
+        console.log(`🎼 Available notes:`, Array.from(this.samples.keys()).sort());
       } else {
         this.isLoaded = false;
-        console.warn('⚠️ Salamander Piano: No samples could be loaded. Check if sample files exist in /public/audio/salamander/');
-        console.warn('📁 Expected files: A0v8.flac, C1v8.flac, E1v8.flac, etc.');
+        console.warn('⚠️ Salamander Piano: No samples could be loaded.');
         console.warn('🔄 Falling back to synthesized piano sounds.');
       }
     } catch (error) {
       console.error('❌ Failed to initialize Salamander Piano:', error);
       this.isLoaded = false;
     }
+  }
+
+  // Auto-discover available notes by trying common patterns
+  private async discoverAvailableNotes(): Promise<string[]> {
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const octaves = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    const commonVelocities = ['v8', 'v1', 'v16']; // Test with common velocities
+    
+    const availableNotes: string[] = [];
+    
+    for (const note of notes) {
+      for (const octave of octaves) {
+        const noteName = `${note}${octave}`;
+        
+        // Test if this note exists with any velocity
+        for (const velocity of commonVelocities) {
+          try {
+            const testUrl = `${this.baseUrl}/${noteName}${velocity}.flac`;
+            const response = await fetch(testUrl, { method: 'HEAD' });
+            if (response.ok) {
+              availableNotes.push(noteName);
+              break; // Found this note, move to next
+            }
+          } catch (error) {
+            // Continue testing
+          }
+        }
+      }
+    }
+    
+    return availableNotes;
   }
 
   private async loadSamples(notes: string[]) {
@@ -198,5 +226,19 @@ export class SalamanderPiano {
 
   getSampleCount(): number {
     return this.samples.size;
+  }
+
+  getAvailableNotes(): string[] {
+    return Array.from(this.samples.keys()).sort();
+  }
+
+  // Get available notes in a specific octave range
+  getNotesInRange(minOctave: number = 2, maxOctave: number = 6): string[] {
+    return this.getAvailableNotes().filter(note => {
+      const match = note.match(/([A-G]#?)(\d+)/);
+      if (!match) return false;
+      const octave = parseInt(match[2]);
+      return octave >= minOctave && octave <= maxOctave;
+    });
   }
 }
